@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+db.sqlite3
+media/
+.venv/
+dataset/
+migrations/
+prepared_dataset.npz
+dataset_summary.csv
+report/
+_init_.py
+agrosmart_crop_dataset.csv

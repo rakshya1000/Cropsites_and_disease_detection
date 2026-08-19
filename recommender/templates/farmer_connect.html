@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load translation_tags %}
+{% block title %}{% tr "Farmer Connect" %}{% endblock %}
+{% block content %}
+<section class="hero-section">
+    <div class="hero-card row g-4 align-items-center">
+        <div class="col-lg-7">
+            <span class="hero-badge"><i class="fa-solid fa-handshake"></i> {% tr "Community powered" %}</span>
+            <h1 class="section-title">{% tr "Farmer Connect" %}</h1>
+            <p class="section-copy">{% tr "Connect with other farmers, share knowledge, and build a stronger agricultural community together." %}</p>
+            <div class="hero-actions d-flex flex-wrap gap-3 mt-4">
+                <a href="{% url 'predict' %}" class="btn btn-success btn-lg"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>{% tr "Start Predicting" %}</a>
+                <a href="{% url 'home' %}" class="btn btn-white btn-lg"><i class="fa-solid fa-house me-2"></i>{% tr "Back Home" %}</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="hero-panel p-4 rounded-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h6 class="mb-1">{% tr "Why connect?" %}</h6>
+                        <p class="small text-muted mb-0">{% tr "Together, farmers grow stronger." %}</p>
+                    </div>
+                    <span class="badge bg-success text-white py-2 px-3">{% tr "Beta" %}</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-white border">
+                            <div>
+                                <div class="text-muted small">{% tr "Knowledge sharing" %}</div>
+                                <div class="fw-bold">{% tr "Learn from peers" %}</div>
+                            </div>
+                            <i class="fa-solid fa-users fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-4 bg-white border">
+                            <div>
+                                <div class="text-muted small">{% tr "Market access" %}</div>
+                                <div class="fw-bold">{% tr "Buy and sell locally" %}</div>
+                            </div>
+                            <i class="fa-solid fa-store fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 rounded-4 bg-white border">
+                            <h6 class="mb-2">{% tr "Coming soon" %}</h6>
+                            <p class="small text-muted mb-0">{% tr "We are building forums, marketplace tools, and local price alerts to help you connect better." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-grid row g-4 my-5">
+    <div class="col-lg-4">
+        <div class="feature-card">
+            <div class="feature-icon bg-success text-white"><i class="fa-solid fa-comments"></i></div>
+            <h5>{% tr "Community forum" %}</h5>
+            <p>{% tr "Ask questions, share experiences, and get advice from farmers across Nepal." %}</p>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="feature-card">
+            <div class="feature-icon bg-success text-white"><i class="fa-solid fa-tags"></i></div>
+            <h5>{% tr "Marketplace" %}</h5>
+            <p>{% tr "Buy and sell crops, seeds, and equipment directly with nearby farmers." %}</p>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="feature-card">
+            <div class="feature-icon bg-success text-white"><i class="fa-solid fa-chart-line"></i></div>
+            <h5>{% tr "Local price alerts" %}</h5>
+            <p>{% tr "Stay updated on market prices and plan your sales with confidence." %}</p>
+        </div>
+    </div>
+</section>
+
+<section class="row g-4 mb-5">
+    <div class="col-lg-8">
+        <div class="card panel-card shadow-sm border-0">
+            <div class="card-body">
+                <h3 class="mb-3">{% tr "How it works" %}</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 bg-success-soft text-center">
+                            <h6 class="mb-2">{% tr "1. Join" %}</h6>
+                            <p class="small text-muted mb-0">{% tr "Create an account and set up your farmer profile." %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 bg-success-soft text-center">
+                            <h6 class="mb-2">{% tr "2. Connect" %}</h6>
+                            <p class="small text-muted mb-0">{% tr "Find farmers in your area and join topic groups." %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 bg-success-soft text-center">
+                            <h6 class="mb-2">{% tr "3. Grow" %}</h6>
+                            <p class="small text-muted mb-0">{% tr "Share, trade, and improve your farming together." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card panel-card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="mb-3">{% tr "Benefits" %}</h5>
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">{% tr "Access to local farming knowledge" %}</li>
+                    <li class="mb-2">{% tr "Better prices through direct sales" %}</li>
+                    <li class="mb-2">{% tr "Support network during challenging seasons" %}</li>
+                    <li class="mb-2">{% tr "Early warnings about pests, weather, and market trends" %}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

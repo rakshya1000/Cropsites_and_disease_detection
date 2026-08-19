@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load translation_tags %}
+{% block title %}{% tr "About" %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold mb-3">{% tr "About Agro Smart" %}</h1>
+            <p class="text-muted mx-auto" style="max-width: 700px; font-size: 1.1rem;">
+                {% tr "A smart crop recommendation platform designed to help Nepali farmers make data-driven decisions using machine learning, soil analysis, and weather insights." %}
+            </p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-bullseye"></i></div>
+                    <h5 class="fw-bold mb-2">{% tr "Mission" %}</h5>
+                    <p class="text-muted small mb-0">{% tr "Empower farmers with accurate, actionable insights for better yields and sustainable farming." %}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-eye"></i></div>
+                    <h5 class="fw-bold mb-2">{% tr "Vision" %}</h5>
+                    <p class="text-muted small mb-0">{% tr "A future where every farmer uses modern tools to plant, care, and sell with confidence." %}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-heart"></i></div>
+                    <h5 class="fw-bold mb-2">{% tr "Why Agro Smart" %}</h5>
+                    <p class="text-muted small mb-0">{% tr "Real ML meets farmer-friendly design. Clear recommendations, practical details, simple workflows." %}</p>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6">
+                <h4 class="fw-bold mb-3"><i class="fa-solid fa-code me-2 text-success"></i> {% tr "Technology" %}</h4>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>Django</strong> — {% tr "Robust backend" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>Bootstrap 5</strong> — {% tr "Responsive UI" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>Font Awesome</strong> — {% tr "Icons" %}</li>
+                    <li><i class="fa-solid fa-check text-success me-2"></i> <strong>Open-Meteo</strong> — {% tr "Weather data" %}</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <h4 class="fw-bold mb-3"><i class="fa-solid fa-star me-2 text-success"></i> {% tr "Key Features" %}</h4>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><i class="fa-solid fa-seedling text-success me-2"></i> {% tr "Crop recommendations with confidence scores" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-leaf text-success me-2"></i> {% tr "Disease detection from leaf images" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-flask text-success me-2"></i> {% tr "Fertilizer recommendation engine" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-map-location-dot text-success me-2"></i> {% tr "Location-aware weather auto-fill" %}</li>
+                    <li class="mb-2"><i class="fa-solid fa-scale-balanced text-success me-2"></i> {% tr "Crop comparison tool" %}</li>
+                    <li><i class="fa-solid fa-chart-simple text-success me-2"></i> {% tr "Prediction history and analytics" %}</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="text-center">
+            <h4 class="fw-bold mb-4">{% tr "How it works" %}</h4>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-pencil"></i></div>
+                    <h6 class="fw-bold mb-2">{% tr "1. Enter inputs" %}</h6>
+                    <p class="text-muted small mb-0">{% tr "Provide soil nutrients, location, and weather details." %}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-microchip"></i></div>
+                    <h6 class="fw-bold mb-2">{% tr "2. Get predictions" %}</h6>
+                    <p class="text-muted small mb-0">{% tr "Random Forest analyzes your data and ranks best-fit crops." %}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon bg-success text-white mx-auto mb-3"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <h6 class="fw-bold mb-2">{% tr "3. Act on results" %}</h6>
+                    <p class="text-muted small mb-0">{% tr "Review crop details, suitability checks, and take action." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

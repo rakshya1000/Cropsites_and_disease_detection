@@ -1,0 +1,207 @@
+﻿{% extends "base.html" %}
+{% load translation_tags %}
+{% block title %}{% tr "Crop Disease Detection" %}{% endblock %}
+{% block content %}
+<div class="card panel-card shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <span class="brand-mark"><i class="fa-solid fa-leaf"></i></span>
+            <div>
+                <h3 class="mb-0">{% tr "Crop Disease Detection" %}</h3>
+                <small class="text-muted">{% tr "Upload a crop leaf image to identify diseases with our AI model." %}</small>
+            </div>
+        </div>
+
+        <!-- Upload section -->
+        <div class="card dd-upload-card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="ddForm">
+                    {% csrf_token %}
+                    <label class="dd-dropzone d-block mb-3" id="ddDropzone">
+                        <input type="file" name="image" id="ddFile" accept="image/*" class="dd-form-control-file" required>
+                        <i class="fa-solid fa-cloud-arrow-up mb-2"></i>
+                        <div class="fw-semibold">{% tr "Click or drag a leaf image here" %}</div>
+                        <div class="form-text mb-0">{% tr "Upload a clear image of a crop leaf for disease detection." %}</div>
+                        <div class="dd-preview-wrap mt-3" id="ddPreviewWrap" style="display:none;">
+                            <img id="ddPreview" class="dd-preview-img" alt="{% tr 'Selected preview' %}">
+                        </div>
+                    </label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-success px-4" id="ddSubmit">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> {% tr "Detect Disease" %}
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="ddClear" style="display:none;">
+                            <i class="fa-solid fa-rotate-left me-1"></i> {% tr "Clear" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Result section -->
+        {% if result %}
+        <div class="card border-success bg-surface shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4"><i class="fa-solid fa-clipboard-check me-2"></i>{% tr "Detection Result" %}</h5>
+
+                <div class="row g-4 align-items-center">
+                    <!-- Uploaded image -->
+                    <div class="col-12 col-lg-5 text-center">
+                        {% if detection.image %}
+                        <img src="{{ detection.image.url }}" alt="{% tr 'Uploaded image' %}" class="dd-result-img">
+                        {% endif %}
+                    </div>
+
+                    <!-- Prediction summary -->
+                    <div class="col-12 col-lg-7">
+                        <div class="card dd-summary-card border-0 bg-transparent">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                    <h6 class="mb-0 fw-bold text-success">{{ result.crop }} — {{ result.disease }}</h6>
+                                    {% if result.is_healthy %}
+                                    <span class="dd-status-badge dd-status-healthy"><i class="fa-solid fa-circle-check me-1"></i>{% tr "Healthy" %}</span>
+                                    {% else %}
+                                    <span class="dd-status-badge dd-status-diseased"><i class="fa-solid fa-triangle-exclamation me-1"></i>{% tr "Diseased" %}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="dd-info-grid row g-0 mb-3">
+                                    <div class="col-6"><strong>{% tr "Crop" %}:</strong> {{ result.crop }}</div>
+                                    <div class="col-6"><strong>{% tr "Disease" %}:</strong> {{ result.disease }}</div>
+                                </div>
+
+                                <div class="mb-1 d-flex justify-content-between">
+                                    <strong>{% tr "Confidence" %}</strong>
+                                    <span class="fw-semibold text-success">{{ result.confidence_percent|floatformat:1 }}%</span>
+                                </div>
+                                <div class="progress dd-confidence-bar mb-4" role="progressbar" aria-label="{% tr 'Confidence' %}" aria-valuenow="{{ result.confidence_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-success" style="width: {{ result.confidence_percent }}%"></div>
+                                </div>
+
+                                <a href="{% url 'disease_detection' %}" class="btn btn-outline-success">
+                                    <i class="fa-solid fa-rotate me-1"></i> {% tr "Analyze Another Image" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed info grid -->
+        {% if result.disease_info %}
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card dd-section-card border-0 shadow-sm">
+                    <div class="card-header"><i class="fa-solid fa-clipboard-list me-2"></i>{% tr "Symptoms" %}</div>
+                    <div class="card-body">
+                        <ul class="mb-0 ps-3">
+                            {% for item in result.disease_info.symptoms %}<li>{{ item }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card dd-section-card border-0 shadow-sm">
+                    <div class="card-header"><i class="fa-solid fa-magnifying-glass me-2"></i>{% tr "Causes" %}</div>
+                    <div class="card-body">
+                        <ul class="mb-0 ps-3">
+                            {% for item in result.disease_info.causes %}<li>{{ item }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card dd-section-card border-0 shadow-sm">
+                    <div class="card-header"><i class="fa-solid fa-shield-halved me-2"></i>{% tr "Prevention" %}</div>
+                    <div class="card-body">
+                        <ul class="mb-0 ps-3">
+                            {% for item in result.disease_info.prevention %}<li>{{ item }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card dd-section-card border-0 shadow-sm">
+                    <div class="card-header"><i class="fa-solid fa-prescription-bottle me-2"></i>{% tr "Recommended Treatment" %}</div>
+                    <div class="card-body">
+                        <ul class="mb-0 ps-3">
+                            {% for item in result.disease_info.treatment %}<li>{{ item }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+<script>
+(function () {
+  const fileInput = document.getElementById('ddFile');
+  const preview = document.getElementById('ddPreview');
+  const previewWrap = document.getElementById('ddPreviewWrap');
+  const clearBtn = document.getElementById('ddClear');
+  const dropzone = document.getElementById('ddDropzone');
+  const form = document.getElementById('ddForm');
+
+  function showPreview(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      previewWrap.style.display = 'inline-block';
+      clearBtn.style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function () {
+      showPreview(this.files && this.files[0]);
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      fileInput.value = '';
+      preview.src = '';
+      previewWrap.style.display = 'none';
+      clearBtn.style.display = 'none';
+    });
+  }
+
+  if (dropzone) {
+    ['dragover', 'dragenter'].forEach(function (ev) {
+      dropzone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        dropzone.classList.add('is-dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dropzone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        dropzone.classList.remove('is-dragover');
+      });
+    });
+    dropzone.addEventListener('drop', function (e) {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files[0]) {
+        fileInput.files = dt.files;
+        showPreview(dt.files[0]);
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', function () {
+      if (fileInput.files && fileInput.files.length) {
+        // submit normally; no loading overlay
+      }
+    });
+  }
+})();
+</script>

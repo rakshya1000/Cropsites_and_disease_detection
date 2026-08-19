@@ -1,0 +1,304 @@
+﻿{% extends "base.html" %}
+{% load static %}
+{% load translation_tags %}
+{% load dict_extras %}
+{% block title %}{% tr "Predict" %}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card panel-card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
+                    <div>
+                        <h3 class="mb-1"><i class="fa-solid fa-flask"></i> {% tr "Crop Recommendation" %}</h3>
+                        <p class="text-muted mb-0">{% tr "Enter your field values and get a crop recommendation powered by our trained model." %}</p>
+                    </div>
+                    <div class="small text-muted d-none d-md-flex align-items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i>
+                        {% tr "Enter numeric values" %} ({% tr "HUMIDITY" %} 0-100, {% tr "PH" %} 0-14)
+                    </div>
+                </div>
+                <form method="post" id="predictForm">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label">{% tr "City (optional for live weather)" %}</label>
+                            <input type="text" name="city" class="form-control" placeholder="e.g. Kathmandu">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{% tr "Province" %}</label>
+                            <select name="province" class="form-select" id="provinceSelect">
+                                <option value="">{% tr "Select province" %}</option>
+                                {% for p in provinces %}
+                                <option value="{{ p }}" {% if province == p %}selected{% endif %}>{{ p }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{% tr "Season" %}</label>
+                            <select name="season" class="form-select" id="seasonSelect">
+                                <option value="">{% tr "Select season" %}</option>
+                                {% for val, label in seasons %}
+                                <option value="{{ val }}" {% if season == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{% tr "Soil Type" %}</label>
+                            <select name="soil_type" class="form-select" id="soilTypeSelect">
+                                <option value="">{% tr "Select soil type" %}</option>
+                                {% for key, val in soil_types.items %}
+                                <option value="{{ key }}" data-n="{{ val.n }}" data-p="{{ val.p }}" data-k="{{ val.k }}" data-note="{{ val.note|escapejs }}" {% if soil_type == key %}selected{% endif %}>{{ val.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text" id="soilNote"></div>
+                        </div>
+                        {% for c in feature_order %}
+                        <div class="col-md-4">
+                            <label class="form-label text-uppercase">{% tr c %}</label>
+                            {% if c|lower == "n" %}
+                                <input type="number" step="any" min="0" max="200" name="{{ c }}" id="id_n" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 90">
+                            {% elif c|lower == "p" %}
+                                <input type="number" step="any" min="0" max="150" name="{{ c }}" id="id_p" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 40">
+                            {% elif c|lower == "k" %}
+                                <input type="number" step="any" min="0" max="250" name="{{ c }}" id="id_k" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 40">
+                            {% elif c|lower == "temperature" %}
+                                <input type="number" step="any" min="-10" max="60" name="{{ c }}" id="id_temperature" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 25">
+                            {% elif c|lower == "humidity" %}
+                                <input type="number" step="any" min="0" max="100" name="{{ c }}" id="id_humidity" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 80">
+                            {% elif c|lower == "ph" %}
+                                <input type="number" step="any" min="0" max="14" name="{{ c }}" id="id_ph" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 7.0">
+                            {% elif c|lower == "rainfall" %}
+                                <input type="number" step="any" min="0" max="500" name="{{ c }}" id="id_rainfall" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 200">
+                            {% else %}
+                                <input type="number" step="any" min="0" name="{{ c }}" value="{{ last_data|get_item:c }}" required class="form-control" placeholder="e.g. 90">
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> {% tr "Predict" %}</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnSample"><i class="fa-solid fa-bolt me-2"></i> {% tr "Use Sample" %}</button>
+                        <button type="button" class="btn btn-outline-danger" id="btnReset"><i class="fa-solid fa-rotate-left me-2"></i> {% tr "Reset" %}</button>
+                    </div>
+                 </form>
+                 {% if result %}
+                 <hr class="my-4" id="resultHr">
+                 <div class="alert alert-success rounded-4" id="resultAlert">
+                     <strong>{% tr "Recommended Crop" %}:</strong> {{ result|title }}
+                 </div>
+
+                 <div class="analysis-params mb-4" id="analysisParams">
+                   <h6 class="fw-bold"><i class="fa-solid fa-sliders"></i> {% tr "Analysis Parameters" %}</h6>
+                   <div class="d-flex flex-wrap gap-3">
+                     <span><strong>{% tr "Rainfall" %}:</strong> {{ analysis_params.rainfall|default:"—" }} mm</span>
+                     <span><strong>{% tr "Temperature" %}:</strong> {{ analysis_params.temperature|default:"—" }} °C</span>
+                     <span><strong>{% tr "Soil" %}:</strong> {{ analysis_params.soil_type|default:"—" }}</span>
+                     <span><strong>{% tr "Season" %}:</strong> {{ analysis_params.season|default:"—" }}</span>
+                   </div>
+                 </div>
+
+                 <div class="row g-4" id="cropCardsGrid">
+                   {% for crop in top_candidates %}
+                   <div class="col-md-6 col-lg-4">
+                     <div class="card h-100 crop-card shadow-sm border-0">
+                       <div class="card-body d-flex flex-column">
+                         <h5 class="card-title">{{ crop.name }}</h5>
+                         <div class="d-flex gap-2 mb-2 flex-wrap">
+                           <span class="badge bg-success">{% tr "Highly Recommended" %}</span>
+                           <span class="badge bg-info text-dark">{{ crop.confidence }}% {% tr "Match" %}</span>
+                         </div>
+                         <ul class="list-unstyled small mb-3">
+                           <li><strong>{% tr "Expected Yield" %}:</strong> {{ crop.yield_per_ha }}</li>
+                           <li><strong>{% tr "Duration" %}:</strong> {{ crop.duration }}</li>
+                           <li><strong>{% tr "Market Type" %}:</strong> {{ crop.market_type }}</li>
+                           <li><strong>{% tr "Water Need" %}:</strong> {{ crop.water_need }}</li>
+                         </ul>
+                         <button type="button" class="btn btn-outline-success btn-sm mt-auto align-self-start" data-bs-toggle="modal" data-bs-target="#cropDetailModal"
+                           data-crop-name="{{ crop.name }}"
+                           data-crop-desc="{{ crop.reason }}"
+                           data-crop-season="{{ crop.season }}"
+                           data-crop-duration="{{ crop.duration }}"
+                           data-crop-yield="{{ crop.yield_per_ha }}"
+                           data-crop-market="{{ crop.market_type }}"
+                           data-crop-water="{{ crop.water_need }}">{% tr "View Details" %}</button>
+                       </div>
+                     </div>
+                   </div>
+                   {% endfor %}
+                 </div>
+
+                 {% if suitability %}
+                 <hr class="mt-4">
+                 <div class="suitability mt-3" id="suitabilitySection">
+                   <h6 class="mb-2"><i class="fa-solid fa-list-check"></i> {% tr "Suitability Analysis" %}</h6>
+                   <ul class="list-unstyled small mb-0">
+                     {% for item in suitability %}
+                     <li class="mb-1">
+                       {% if item.met %}<i class="fa-solid fa-check text-success"></i>{% else %}<i class="fa-solid fa-xmark text-danger"></i>{% endif %}
+                       {{ item.label }}
+                     </li>
+                     {% endfor %}
+                   </ul>
+                 </div>
+                 {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="cropDetailModal" tabindex="-1" aria-labelledby="cropDetailModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-success" id="cropDetailModalLabel"><i class="fa-solid fa-seedling me-2"></i> <span id="modalCropName"></span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small" id="modalCropDesc"></p>
+            <ul class="list-unstyled small mb-0">
+              <li><strong>{% tr "Season" %}:</strong> <span id="modalCropSeason"></span></li>
+              <li><strong>{% tr "Duration" %}:</strong> <span id="modalCropDuration"></span></li>
+              <li><strong>{% tr "Expected Yield" %}:</strong> <span id="modalCropYield"></span></li>
+              <li><strong>{% tr "Market Type" %}:</strong> <span id="modalCropMarket"></span></li>
+              <li><strong>{% tr "Water Need" %}:</strong> <span id="modalCropWater"></span></li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{% tr "Close" %}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card panel-card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="fa-solid fa-lightbulb"></i> {% tr "Tips" %}</h5>
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">{% tr "Use realistic local values for temperature, humidity, and rainfall." %}</li>
+                    <li class="mb-2">{% tr "Soil pH is 0-14; most crops prefer 6-7." %}</li>
+                    <li>{% tr "Save multiple predictions and compare them in your History." %}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card panel-card shadow-sm border-0 mt-3">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="fa-solid fa-circle-question"></i> {% tr "What is N-P-K?" %}</h5>
+                <p class="small text-muted mb-0">{% tr "N (Nitrogen), P (Phosphorus), and K (Potassium) are the key nutrients affecting crop growth. Balance them carefully for strong yields." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    const sample = { N: 90, P: 40, K: 40, temperature: 20, humidity: 80, ph: 7, rainfall: 200 };
+    document.getElementById('btnSample')?.addEventListener('click', () => {
+        document.querySelectorAll('#predictForm input[name]').forEach(inp => {
+            if (sample[inp.name] !== undefined) inp.value = sample[inp.name];
+        });
+        Swal.fire({ icon: 'info', title: '{% tr "Sample values loaded" %}' });
+    });
+
+    // Live weather auto-fill: as soon as the city field is filled (no need to
+    // click outside), fetch real temperature/humidity/rainfall from Open-Meteo
+    // and fill the 3 boxes. Debounced so it fires once typing settles.
+    const cityInput = document.querySelector('input[name="city"]');
+    if (cityInput) {
+        let cityTimer = null;
+        let lastCity = '';
+        const fetchWeather = async () => {
+            const city = cityInput.value.trim();
+            if (!city || city === lastCity) return;
+            lastCity = city;
+            try {
+                const res = await fetch(`/api/weather/?city=${encodeURIComponent(city)}`);
+                const d = await res.json();
+                if (!d.ok) return;
+                const fill = (name, val) => {
+                    const el = document.querySelector(`input[name="${name}"]`);
+                    if (el && !el.value) el.value = val;   // fill only if empty
+                };
+                fill('temperature', d.temperature);
+                fill('humidity', d.humidity);
+                fill('rainfall', d.rainfall);
+            } catch (e) { /* network error: ignore, user can type manually */ }
+        };
+        cityInput.addEventListener('input', () => {
+            clearTimeout(cityTimer);
+            cityTimer = setTimeout(fetchWeather, 600);
+        });
+        cityInput.addEventListener('blur', fetchWeather);
+    }
+
+    const soilSelect = document.getElementById('soilTypeSelect');
+    const soilNote = document.getElementById('soilNote');
+    if (soilSelect) {
+        soilSelect.addEventListener('change', () => {
+            const opt = soilSelect.options[soilSelect.selectedIndex];
+            const n = opt.getAttribute('data-n');
+            const p = opt.getAttribute('data-p');
+            const k = opt.getAttribute('data-k');
+            const note = opt.getAttribute('data-note');
+            if (n !== null) {
+                const nEl = document.getElementById('id_n');
+                const pEl = document.getElementById('id_p');
+                const kEl = document.getElementById('id_k');
+                if (nEl) nEl.value = n;
+                if (pEl) pEl.value = p;
+                if (kEl) kEl.value = k;
+            }
+            if (soilNote && note) {
+                soilNote.textContent = note;
+            } else if (soilNote) {
+                soilNote.textContent = '';
+            }
+        });
+    }
+
+    const btnReset = document.getElementById('btnReset');
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            const form = document.getElementById('predictForm');
+            if (form) {
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(inp => {
+                    if (inp.type === 'text' || inp.type === 'number') {
+                        inp.value = '';
+                    }
+                });
+                const selects = form.querySelectorAll('select');
+                selects.forEach(sel => {
+                    sel.selectedIndex = 0;
+                });
+            }
+            const soilNote = document.getElementById('soilNote');
+            if (soilNote) soilNote.textContent = '';
+
+            const resultHr = document.getElementById('resultHr');
+            const resultAlert = document.getElementById('resultAlert');
+            const analysisParams = document.getElementById('analysisParams');
+            const cropCardsGrid = document.getElementById('cropCardsGrid');
+            const suitabilitySection = document.getElementById('suitabilitySection');
+            if (resultHr) resultHr.style.display = 'none';
+            if (resultAlert) resultAlert.style.display = 'none';
+            if (analysisParams) analysisParams.style.display = 'none';
+            if (cropCardsGrid) cropCardsGrid.style.display = 'none';
+            if (suitabilitySection) suitabilitySection.style.display = 'none';
+        });
+    }
+
+    const detailModal = document.getElementById('cropDetailModal');
+    if (detailModal) {
+        detailModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            document.getElementById('modalCropName').textContent = button.getAttribute('data-crop-name') || '';
+            document.getElementById('modalCropDesc').textContent = button.getAttribute('data-crop-desc') || '';
+            document.getElementById('modalCropSeason').textContent = button.getAttribute('data-crop-season') || '—';
+            document.getElementById('modalCropDuration').textContent = button.getAttribute('data-crop-duration') || '—';
+            document.getElementById('modalCropYield').textContent = button.getAttribute('data-crop-yield') || '—';
+            document.getElementById('modalCropMarket').textContent = button.getAttribute('data-crop-market') || '—';
+            document.getElementById('modalCropWater').textContent = button.getAttribute('data-crop-water') || '—';
+        });
+    }
+})();
+</script>
+{% endblock %}
